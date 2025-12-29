@@ -4,11 +4,11 @@ import { NextRequest } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
-  const { id } = params;
-  const key = `paste:${id}`;
+  const { id } = await context.params;
 
+  const key = `paste:${id}`;
   const data = await kv.hgetall<any>(key);
 
   if (!data) {
