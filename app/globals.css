@@ -1,0 +1,195 @@
+@import "tailwindcss";
+
+.particle-layer {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* base */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+}
+
+/* bubbles */
+.bubble {
+  background: rgba(99, 102, 241, 0.8);
+  animation: particle-lift linear infinite;
+}
+
+/* stars */
+.star {
+  width: 1px;
+  height: 1px;
+  background: cyan;
+  animation: star-move linear infinite;
+}
+
+/* drifters */
+.drifter {
+  width: 2px;
+  height: 2px;
+  background: #22d3ee;
+}
+
+.drifter.ltr {
+  animation: drift-ltr linear infinite;
+}
+
+.drifter.rtl {
+  animation: drift-rtl linear infinite;
+}
+
+/* animations */
+@keyframes particle-lift {
+  from { transform: translateY(0); }
+  to { transform: translateY(-120vh); }
+}
+
+@keyframes star-move {
+  from { transform: translate(0, 0); }
+  to { transform: translate(100vw, 100vh); }
+}
+
+@keyframes drift-ltr {
+  from { transform: translateX(-10vw); }
+  to { transform: translateX(110vw); }
+}
+
+@keyframes drift-rtl {
+  from { transform: translateX(110vw); }
+  to { transform: translateX(-10vw); }
+}
+
+
+/* Base layer */
+.particle-layer {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    #05050a 0%,
+    #000000 60%
+  );
+}
+
+/* Base particle */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+  filter: blur(0.5px);
+}
+
+/* BLUE GLOW DUST */
+.bubble {
+  background: rgba(80, 150, 255, 0.9);
+  box-shadow:
+    0 0 6px rgba(80,150,255,0.8),
+    0 0 12px rgba(80,150,255,0.6),
+    0 0 20px rgba(80,150,255,0.4);
+  animation: particle-lift linear infinite;
+}
+
+/* PINK STARS */
+.star {
+  width: 1px;
+  height: 1px;
+  background: rgb(255, 80, 180);
+  box-shadow:
+    0 0 6px rgba(255,80,180,0.9),
+    0 0 12px rgba(255,80,180,0.6);
+  animation: star-move linear infinite;
+}
+
+/* SOFT BLUE DRIFTERS */
+.drifter {
+  width: 2px;
+  height: 2px;
+  background: rgb(120, 200, 255);
+  box-shadow:
+    0 0 8px rgba(120,200,255,0.7),
+    0 0 16px rgba(120,200,255,0.4);
+}
+
+.drifter.ltr {
+  animation: drift-ltr linear infinite;
+}
+
+.drifter.rtl {
+  animation: drift-rtl linear infinite;
+}
+
+/* Animations */
+@keyframes particle-lift {
+  from { transform: translateY(0); }
+  to { transform: translateY(-120vh); }
+}
+
+@keyframes star-move {
+  from { transform: translate(0, 0); }
+  to { transform: translate(100vw, 100vh); }
+}
+
+@keyframes drift-ltr {
+  from { transform: translateX(-10vw); }
+  to { transform: translateX(110vw); }
+}
+
+@keyframes drift-rtl {
+  from { transform: translateX(110vw); }
+  to { transform: translateX(-10vw); }
+}
+
+
+@layer base {
+  /* Chrome, Safari, Edge, Opera */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+}
+
+@layer utilities {
+  /* Width and Height */
+  ::-webkit-scrollbar {
+    width: 8px;  /* Width of vertical scrollbar */
+    height: 8px; /* Height of horizontal scrollbar */
+  }
+
+  /* Track (The background) */
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+    border-radius: 10px;
+  }
+ 
+  /* Thumb (The draggable part) */
+  ::-webkit-scrollbar-thumb {
+    background: #888; 
+    border-radius: 10px;
+  }
+
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555; 
+  }
+
+  /* Firefox Support (Standard CSS) */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f1f1f1;
+  }
+}

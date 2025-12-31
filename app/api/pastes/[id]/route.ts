@@ -1,45 +1,43 @@
 import kv from "@/lib/kv";
-import { nowMs } from "@/lib/time";
-import { NextRequest } from "next/server";
+import { getNowMs } from "@/lib/now";
+import { NextResponse } from "next/server";
 
 export async function GET(
-  req: NextRequest,
-  context: any
+  req: Request,
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await context.params;
-
+    const id = await params.id;
   const key = `paste:${id}`;
-  const data = await kv.hgetall<any>(key);
+  const paste = await kv.get<any>(key);
 
-  if (!data) {
-    return Response.json({ error: "Not found" }, { status: 404 });
+  if (!paste) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const now = nowMs(req);
+  const now = getNowMs(req);
 
-  if (data.expires_at && now >= data.expires_at) {
+  // TTL check
+  if (paste.expires_at) {
+    const expiresAtMs = Date.parse(paste.expires_at);
+    if (now >= expiresAtMs) {
+      await kv.del(key);
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+  }
+
+  // Atomic view increment
+  const views = await kv.hincrby(key, "views", 1); // atomic increment
+
+  // View limit check
+  if (paste.max_views !== null && views > paste.max_views) {
     await kv.del(key);
-    return Response.json({ error: "Expired" }, { status: 404 });
+    return NextResponse.json({ error: "View limit exceeded" }, { status: 404 });
   }
 
-  if (data.max_views !== null && data.views >= data.max_views) {
-    await kv.del(key);
-    return Response.json({ error: "View limit exceeded" }, { status: 404 });
-  }
-
-  const views = await kv.hincrby(key, "views", 1);
-
-  if (data.max_views !== null && views > data.max_views) {
-    await kv.del(key);
-    return Response.json({ error: "View limit exceeded" }, { status: 404 });
-  }
-
-  return Response.json({
-    content: data.content,
+  return NextResponse.json({
+    content: paste.content,
     remaining_views:
-      data.max_views === null ? null : data.max_views - views,
-    expires_at: data.expires_at
-      ? new Date(data.expires_at).toISOString()
-      : null
+      paste.max_views === null ? null : Math.max(0, paste.max_views - views),
+    expires_at: paste.expires_at ?? null,
   });
 }
