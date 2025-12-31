@@ -16,6 +16,7 @@ export default async function PastePage({
 
   // Deterministic time using Next.js headers
   const now = getNowMs({ headers: headers() } as any);
+console.log(paste);
 
   // TTL check
   if (paste.expires_at) {
@@ -38,7 +39,7 @@ export default async function PastePage({
   return (
     <main className="min-h-screen bg-black text-white flex items-center justify-center p-6">
       <pre
-        className="max-w-3xl w-full whitespace-pre-wrap break-words
+        className="max-w-3xl select-none w-full whitespace-pre-wrap break-words
                    bg-white/5 border border-white/10
                    rounded-xl p-6 text-sm leading-relaxed"
       >
