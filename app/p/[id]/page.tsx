@@ -1,19 +1,21 @@
 import kv from "@/lib/kv";
 import { getNowMs } from "@/lib/now";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers"; // ✅ import headers
 
 export default async function PastePage({
   params,
 }: {
-  params: { id: string };
+  params: { id: string } | Promise<{ id: string }>;
 }) {
-    const {id} = await params;
+  const { id } = await params; // unwrap params
   const key = `paste:${id}`;
   const paste = await kv.hgetall<any>(key);
 
-  if (!paste) notFound();
+  if (!paste || Object.keys(paste).length === 0) notFound();
 
-  const now = getNowMs();
+  // Deterministic time using Next.js headers
+  const now = getNowMs({ headers: headers() } as any);
 
   // TTL check
   if (paste.expires_at) {

@@ -11,6 +11,7 @@ export default function Home() {
   const [minutes, setMinutes] = useState("");
   const [maxViews, setMaxViews] = useState("");
   const [url, setUrl] = useState("");
+  const [error, setError] = useState("");
 
   function computeTTLSeconds() {
     const d = Number(days) || 0;
@@ -21,19 +22,32 @@ export default function Home() {
   }
 
   async function submit() {
+    setError("");
     const payload: any = { content };
     const ttl_seconds = computeTTLSeconds();
     if (ttl_seconds) payload.ttl_seconds = ttl_seconds;
     if (maxViews) payload.max_views = Number(maxViews);
 
-    const res = await fetch("/api/pastes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const res = await fetch("/api/pastes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    const data = await res.json();
-    setUrl(data.url);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error?.formErrors?.content?.[0] || data.error || "Unknown error");
+        setUrl("");
+        return;
+      }
+
+      setUrl(data.url);
+    } catch (err: any) {
+      setError(err.message || "Network error");
+      setUrl("");
+    }
   }
 
   return (
@@ -43,14 +57,11 @@ export default function Home() {
       <BackgroundText />
 
       <div className="relative z-10 backdrop-blur-xl bg-white/5 border border-white/10 p-6 rounded-2xl shadow-2xl w-full max-w-5xl">
-
         <h1 className="text-2xl font-semibold mb-4 text-center tracking-wide">
           Pastebin Lite
         </h1>
 
         <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-4 min-h-[320px]">
-
-          {/* TEXTAREA */}
           <textarea
             className="w-full h-full min-h-[320px] p-4 rounded-lg bg-black/40 border border-white/10 
               focus:outline-none focus:ring-2 focus:ring-white/20 transition
@@ -63,7 +74,6 @@ export default function Home() {
             onChange={(e) => setContent(e.target.value)}
           />
 
-          {/* CONTROLS */}
           <div className="flex flex-col gap-3">
             <input
               type="number"
@@ -102,6 +112,7 @@ export default function Home() {
           </div>
         </div>
 
+        {error && <p className="text-red-400 mt-2 text-center">{error}</p>}
         {url && (
           <a
             href={url}

@@ -26,10 +26,7 @@ export async function POST(req: Request) {
   const id = nanoid();
   const now = Date.now();
 
-  const expires_at =
-    ttl_seconds !== undefined
-      ? new Date(now + ttl_seconds * 1000).toISOString()
-      : null;
+  const expires_at = ttl_seconds ? new Date(now + ttl_seconds * 1000).toISOString() : null;
 
   const paste = {
     content,
@@ -41,10 +38,14 @@ export async function POST(req: Request) {
 
   await kv.hset(`paste:${id}`, paste);
 
+  // Ensure URL is always valid
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL || `https://${req.headers.get("host")}`;
+
   return NextResponse.json(
     {
       id,
-      url: `${process.env.NEXT_PUBLIC_BASE_URL}/p/${id}`,
+      url: `${baseUrl}/p/${id}`,
     },
     { status: 201 }
   );

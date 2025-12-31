@@ -1,16 +1,17 @@
 import kv from "@/lib/kv";
 import { getNowMs } from "@/lib/now";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
 export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-    const id = await params.id;
+  const { id } = await params;
   const key = `paste:${id}`;
-  const paste = await kv.get<any>(key);
 
-  if (!paste) {
+  const paste = await kv.hgetall<any>(key);
+
+  if (!paste || Object.keys(paste).length === 0) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
@@ -26,7 +27,7 @@ export async function GET(
   }
 
   // Atomic view increment
-  const views = await kv.hincrby(key, "views", 1); // atomic increment
+  const views = await kv.hincrby(key, "views", 1);
 
   // View limit check
   if (paste.max_views !== null && views > paste.max_views) {
@@ -37,7 +38,9 @@ export async function GET(
   return NextResponse.json({
     content: paste.content,
     remaining_views:
-      paste.max_views === null ? null : Math.max(0, paste.max_views - views),
+      paste.max_views === null
+        ? null
+        : Math.max(0, paste.max_views - views),
     expires_at: paste.expires_at ?? null,
   });
 }
