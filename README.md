@@ -1,165 +1,189 @@
-Pastebin-Lite 📝
+# Pastebin-Lite 📝
 
-A minimal Pastebin-like application built with Next.js App Router and Vercel KV.
+A minimal Pastebin-like application built with **Next.js App Router** and **Vercel KV**.  
 Users can create text pastes and share a unique link to view them.
-Designed to pass automated tests with deterministic behavior and strict API contracts.
 
-Live URL:
+This project is intentionally **backend-focused** and **test-driven**, designed to pass automated evaluation with strict API contracts and deterministic behavior.
+
+**Live URL:**  
 👉 https://pastebin-lite-tau.vercel.app/
 
-Features
+---
 
-Create a text paste
+## Features
 
-Access paste via a shareable URL
+- Create a text paste
+- Shareable URL for viewing pastes
+- Optional expiration (TTL)
+- Optional maximum view count
+- Atomic view-count increment (race-condition safe)
+- Deterministic TTL handling (test-friendly)
+- Health check endpoint for persistence validation
 
-Optional expiration (TTL)
+---
 
-Optional maximum view count
+## Tech Stack
 
-Atomic view count increment (race-condition safe)
+- **Next.js** (App Router)
+- **TypeScript**
+- **Vercel KV (Redis)**
+- **Zod** for request validation
+- **nanoid** for unique ID generation
 
-Deterministic TTL handling (test-friendly)
+---
 
-Health check endpoint for infrastructure validation
+## Data Model (KV)
 
-Tech Stack
+Each paste is stored as a JSON object in KV:
 
-Next.js (App Router)
-
-TypeScript
-
-Vercel KV (Redis)
-
-Zod for request validation
-
-nanoid for unique IDs
-
-Data Model (KV)
-
-Each paste is stored as a JSON object:
-
+```ts
 {
   content: string,
-  createdAt: number,        // epoch ms
-  expiresAt: number | null, // epoch ms
+  createdAt: number,        // epoch milliseconds
+  expiresAt: number | null, // epoch milliseconds
   maxViews: number | null,
   views: number
 }
+```
 
-Important invariants
+### Data Guarantees
 
-null is used intentionally (never undefined)
+- `null` is used intentionally (never `undefined`)
+- `views` is always a number
+- TTL is enforced both via **KV expiration** and **runtime checks**
+- View count updates are atomic
 
-views is always a number
+---
 
-TTL is enforced both by KV expiration and runtime checks
+## API Endpoints
 
-API Endpoints
-Create a paste
+### Create a Paste
 
-POST /api/pastes
+**POST** `/api/pastes`
 
-Request body
-
+#### Request Body
+```json
 {
   "content": "hello world",
   "ttl_seconds": 300,
   "max_views": 5
 }
+```
 
-
-Response
-
+#### Response
+```json
 {
   "id": "abc123",
   "url": "/p/abc123"
 }
+```
 
-Get a paste (JSON)
+---
 
-GET /api/pastes/:id
+### Get Paste (JSON)
 
-Behavior
+**GET** `/api/pastes/:id`
 
-Atomically increments view count
+#### Behavior
 
-Returns 404 if expired or view-limit exceeded
+- Atomically increments view count
+- Returns `404` if:
+  - Paste does not exist
+  - Paste is expired
+  - Max view count is exceeded
+- No state mutation occurs if the paste is invalid
 
-Never mutates state if paste is invalid
+---
 
-View paste (HTML)
+### View Paste (HTML)
 
-GET /p/:id
+**GET** `/p/:id`
 
-Server-rendered page
+- Server-rendered page
+- Enforces TTL and max-view rules
+- Atomically increments view count
+- Displays a clean error state for invalid or expired pastes
 
-Enforces TTL and max-view rules
+---
 
-Increments view count atomically
+### Health Check
 
-Shows clean error state if invalid
-
-Health check
-
-GET /api/healthz
+**GET** `/api/healthz`
 
 Used to verify KV connectivity and persistence correctness.
 
-Returns:
+#### Response
+```json
+{
+  "ok": true
+}
+```
 
-{ "ok": true }
+---
 
-Environment Variables
+## Environment Variables
 
-Create a .env.local file:
+Create a `.env.local` file with the following variables:
 
+```env
 KV_REST_API_READ_ONLY_TOKEN=
 KV_REST_API_TOKEN=
 KV_REST_API_URL=
 KV_URL=
 REDIS_URL=
 NEXT_PUBLIC_BASE_URL=
+```
 
-Notes
+### Notes
 
-NEXT_PUBLIC_BASE_URL must match your deployment URL
+- `NEXT_PUBLIC_BASE_URL` must match the deployed base URL
+- KV-related variables are automatically injected by Vercel when KV is linked
 
-KV variables are provided automatically on Vercel when KV is linked
+---
 
-Local Development
+## Local Development
+
+Install dependencies:
+
+```bash
 npm install
+```
+
+Run the development server:
+
+```bash
 npm run dev
+```
 
+The app will be available at:
 
-App runs at:
-
+```
 http://localhost:3000
+```
 
-Design Decisions (Intentional)
+---
 
-Atomic operations only for view count (no race conditions)
+## Design Decisions (Intentional)
 
-Deterministic TTL when TEST_MODE is enabled
+- Atomic Redis operations to prevent race conditions
+- Deterministic TTL behavior when `TEST_MODE` is enabled
+- Strict API contracts (no `undefined`, only explicit `null`)
+- Server Components used for HTML routes
+- Fail-fast behavior for expired or invalid pastes
 
-Strict API contract (null vs undefined is enforced)
+---
 
-Server Components for HTML routes
+## Out of Scope
 
-Fail fast on invalid or expired pastes
+- ❌ Authentication
+- ❌ Syntax highlighting
+- ❌ Paste editing
+- ❌ UI-heavy features
 
-What This Is NOT
+This is a **minimal, backend-first assignment**, not a full Pastebin clone.
 
-❌ No authentication
+---
 
-❌ No syntax highlighting
-
-❌ No paste editing
-
-❌ No UI bloat
-
-This is a test-driven backend-first assignment, not a startup.
-
-License
+## License
 
 MIT
